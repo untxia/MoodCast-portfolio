@@ -1,0 +1,19 @@
+# Dépendances
+node_modules/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+
+# Fichiers temporaires / sauvegardes
+*.zip
+apercu-*.html
+index-allinone.html
+
+# Clés et secrets (IMPORTANT : ne jamais commiter de clé API)
+.env
+config.local.js
