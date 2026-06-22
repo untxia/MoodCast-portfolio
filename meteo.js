@@ -545,6 +545,19 @@ function renderDate() {
     new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 }
 
+function startClock() {
+  function tick() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    const el = document.getElementById('clock-time');
+    if (el) el.innerHTML = `${h}:${m}<span class="clock-seconds">:${s}</span>`;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
 // ===== CHARGER L'ENTRÉE DU JOUR =====
 function loadTodayEntry() {
   const data = loadData();
@@ -918,6 +931,7 @@ document.getElementById('btn-clear-all').addEventListener('click', () => {
 function init() {
   renderGreeting();
   renderDate();
+  startClock();
   initSettings();
   initNotif();
   loadTodayEntry();

@@ -256,32 +256,33 @@ body.contrast .logo-big, body.contrast .logo-small {
   font-weight: 500;
 }
 
-/* ===== DATE PILL — effet 4D holographique ===== */
-.date-pill {
-  position: relative;
-  display: inline-block;
-  background: linear-gradient(145deg, #13103a 0%, #0d0b25 60%, #1a0f3a 100%);
-  border-radius: 22px;
-  padding: 6px 20px;
-  font-size: calc(12px * var(--font-scale));
-  color: #ede9fe;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-align: center;
+/* ===== DATETIME 3D FLOTTANT — heure + date ===== */
+.datetime-3d {
+  perspective: 700px;
+  perspective-origin: 50% 60%;
   margin-bottom: 20px;
-  text-shadow: 0 0 12px rgba(167,139,250,0.9), 0 0 24px rgba(139,92,246,0.5);
+}
+
+.clock-face {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(145deg, #0c0a22 0%, #12103a 55%, #180c30 100%);
+  border-radius: 22px;
+  padding: 14px 28px 12px;
   isolation: isolate;
-  animation: dateFloat4D 6s ease-in-out infinite;
+  animation: clockFloat3D 8s ease-in-out infinite;
   box-shadow:
-    0 0 0 0.5px rgba(139,92,246,0.4),
-    0 3px 10px rgba(99,102,241,0.45),
-    0 8px 28px rgba(139,92,246,0.28),
-    0 16px 50px rgba(99,102,241,0.15),
-    0 0 60px rgba(167,139,250,0.08);
+    0 0 0 0.5px rgba(139,92,246,0.35),
+    0 5px 18px rgba(99,102,241,0.45),
+    0 12px 36px rgba(139,92,246,0.25),
+    0 20px 55px rgba(99,102,241,0.12);
 }
 
 /* Bordure arc-en-ciel holographique tournante */
-.date-pill::before {
+.clock-face::before {
   content: '';
   position: absolute;
   inset: -2px;
@@ -294,25 +295,57 @@ body.contrast .logo-big, body.contrast .logo-small {
   background-size: 400% 100%;
   z-index: -1;
   animation: holoBorder 2.8s linear infinite;
-  filter: blur(0.6px) brightness(1.1);
+  filter: blur(0.6px) brightness(1.15);
 }
 
 /* Sweep de lumière qui passe */
-.date-pill::after {
+.clock-face::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 22px;
   background: linear-gradient(
-    110deg,
+    115deg,
     transparent 20%,
-    rgba(255,255,255,0.22) 48%,
-    rgba(255,255,255,0.08) 52%,
+    rgba(255,255,255,0.2) 48%,
+    rgba(255,255,255,0.07) 52%,
     transparent 80%
   );
   background-size: 250% 100%;
-  animation: shimmerDate 3.5s ease-in-out infinite;
+  animation: shimmerDate 3.8s ease-in-out infinite;
   pointer-events: none;
+}
+
+/* Grandes digits de l'heure */
+.clock-time {
+  font-family: 'Courier New', 'SF Mono', Consolas, monospace;
+  font-size: calc(40px * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f0eeff;
+  line-height: 1;
+  text-shadow:
+    0 0 8px rgba(167,139,250,1),
+    0 0 18px rgba(139,92,246,0.8),
+    0 0 36px rgba(99,102,241,0.5),
+    0 0 60px rgba(99,102,241,0.2);
+}
+
+/* Secondes en plus petit */
+.clock-seconds {
+  font-size: 0.58em;
+  opacity: 0.65;
+  letter-spacing: 0.02em;
+}
+
+/* Date en dessous */
+.clock-date {
+  font-size: calc(11px * var(--font-scale));
+  color: #c4b5fd;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: capitalize;
+  text-shadow: 0 0 10px rgba(139,92,246,0.5);
 }
 
 @keyframes holoBorder {
@@ -320,47 +353,62 @@ body.contrast .logo-big, body.contrast .logo-small {
   100% { background-position: 400% 50%; }
 }
 
-@keyframes dateFloat4D {
-  0%, 100% {
-    transform: perspective(500px) rotateX(0deg)   rotateY(0deg)   translateY(0px)  translateZ(0px);
-    box-shadow: 0 3px 10px rgba(99,102,241,0.45), 0 8px 28px rgba(139,92,246,0.28), 0 16px 50px rgba(99,102,241,0.15);
-  }
-  15% {
-    transform: perspective(500px) rotateX(14deg)  rotateY(-20deg) translateY(-5px) translateZ(8px);
-    box-shadow: 0 5px 18px rgba(236,72,153,0.55),  0 12px 38px rgba(236,72,153,0.3),  0 22px 60px rgba(167,139,250,0.2);
-  }
-  35% {
-    transform: perspective(500px) rotateX(-10deg) rotateY(16deg)  translateY(-9px) translateZ(12px);
-    box-shadow: 0 8px 24px rgba(6,182,212,0.55),   0 18px 48px rgba(6,182,212,0.28),   0 30px 70px rgba(99,102,241,0.18);
-  }
-  55% {
-    transform: perspective(500px) rotateX(8deg)   rotateY(-10deg) translateY(-6px) translateZ(6px);
-    box-shadow: 0 6px 20px rgba(245,158,11,0.5),   0 14px 40px rgba(245,158,11,0.25),  0 25px 65px rgba(139,92,246,0.18);
-  }
-  75% {
-    transform: perspective(500px) rotateX(-6deg)  rotateY(18deg)  translateY(-3px) translateZ(4px);
-    box-shadow: 0 4px 14px rgba(16,185,129,0.5),   0 10px 32px rgba(16,185,129,0.28),  0 20px 55px rgba(99,102,241,0.15);
-  }
-}
-
 @keyframes shimmerDate {
   0%          { background-position: 200% 0; }
   45%, 100%   { background-position: -100% 0; }
 }
 
-body.contrast .date-pill {
+@keyframes clockFloat3D {
+  0%, 100% {
+    transform: perspective(700px) rotateX(0deg) rotateY(0deg) translateY(0px) translateZ(0px);
+    box-shadow:
+      0 5px 18px rgba(99,102,241,0.45),
+      0 12px 36px rgba(139,92,246,0.25),
+      0 20px 55px rgba(99,102,241,0.12);
+  }
+  16% {
+    transform: perspective(700px) rotateX(12deg) rotateY(-16deg) translateY(-8px) translateZ(14px);
+    box-shadow:
+      0 8px 26px rgba(236,72,153,0.55),
+      0 18px 48px rgba(236,72,153,0.28),
+      0 28px 66px rgba(167,139,250,0.18);
+  }
+  36% {
+    transform: perspective(700px) rotateX(-8deg) rotateY(14deg) translateY(-13px) translateZ(20px);
+    box-shadow:
+      0 12px 32px rgba(6,182,212,0.55),
+      0 24px 56px rgba(6,182,212,0.28),
+      0 36px 76px rgba(99,102,241,0.18);
+  }
+  56% {
+    transform: perspective(700px) rotateX(9deg) rotateY(-8deg) translateY(-7px) translateZ(10px);
+    box-shadow:
+      0 8px 24px rgba(245,158,11,0.5),
+      0 18px 44px rgba(245,158,11,0.25),
+      0 28px 68px rgba(139,92,246,0.18);
+  }
+  76% {
+    transform: perspective(700px) rotateX(-5deg) rotateY(15deg) translateY(-4px) translateZ(7px);
+    box-shadow:
+      0 6px 20px rgba(16,185,129,0.5),
+      0 14px 38px rgba(16,185,129,0.28),
+      0 22px 58px rgba(99,102,241,0.15);
+  }
+}
+
+body.contrast .clock-face {
   background: #09070f;
-  color: var(--color-accent);
-  text-shadow: none;
   animation: none;
   box-shadow: 0 0 0 1.5px var(--color-accent);
 }
-body.contrast .date-pill::before,
-body.contrast .date-pill::after { display: none; }
+body.contrast .clock-face::before,
+body.contrast .clock-face::after { display: none; }
+body.contrast .clock-time { color: var(--color-accent); text-shadow: none; }
+body.contrast .clock-date { color: var(--color-accent); text-shadow: none; }
 
-body.reduce-motion .date-pill { animation: none; }
-body.reduce-motion .date-pill::before { animation: none; }
-body.reduce-motion .date-pill::after  { animation: none; }
+body.reduce-motion .clock-face { animation: none; }
+body.reduce-motion .clock-face::before { animation: none; }
+body.reduce-motion .clock-face::after  { animation: none; }
 
 /* ===== MÉTÉO ===== */
 .weather-hero { text-align: center; padding: 10px 0 16px; }
