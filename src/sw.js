@@ -1,12 +1,15 @@
-const CACHE_NAME = 'moodcast-v1';
+const CACHE_NAME = 'moodcast-v5';
+const EMOJI = [/*EMOJI_LIST*/]; // rempli au build (scripts/build.mjs)
 const ASSETS = [
   './',
   './index.html',
-  './meteo.css',
+  './privacy.html',
+  './app.css',
   './meteo.js',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  ...EMOJI.map(n => './emoji/' + n + '.webp')
 ];
 
 // INSTALLATION
@@ -29,8 +32,19 @@ self.addEventListener('activate', event => {
 
 // FETCH — mode hors ligne
 self.addEventListener('fetch', event => {
+  // Laisse passer les appels non-GET et la fonction IA (jamais mis en cache)
+  if (event.request.method !== 'GET' || new URL(event.request.url).pathname.startsWith('/.netlify/')) return;
+  // Réseau d'abord (toujours la dernière version), cache en secours hors-ligne
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    fetch(event.request)
+      .then(response => {
+        if (response.ok && new URL(event.request.url).origin === location.origin) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request).then(r => r || caches.match('./index.html')))
   );
 });
 

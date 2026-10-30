@@ -1,3 +1,12 @@
+import {
+  dateKey, avgScore, getWeather, entryScore, scoreBand, computeStats, bestWeekday,
+  streakMessage, last7Summary, last30Keys, mondayOffset, greetingFor, timeOfDay, TIME_ICONS, moodPrompt, gaugeState, gaugeIcon, splitTag, TAG_COLORS, DAY_NAMES
+} from './logic.js';
+import { emojiHTML, setEmoji } from './emoji.js';
+import { playSplash } from './splash.js';
+import { aiAllowed, hasDecided, setConsent, showConsent } from './consent.js';
+import { createScene } from './scene3d.js';
+
 document.addEventListener('DOMContentLoaded', () => {
 
 // ===== CONSTANTES =====
@@ -17,11 +26,7 @@ function saveData(data) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
   catch(e) { console.error('Erreur sauvegarde', e); }
 }
-function todayKey() {
-  const n = new Date();
-  return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0');
-}
-function avgScore(p, m, h) { return Math.round((p + m + h) / 3 * 10) / 10; }
+function todayKey() { return dateKey(); }
 function formatDate(key) {
   const [y, m, d] = key.split('-');
   return new Date(+y, +m-1, +d).toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' });
@@ -35,11 +40,11 @@ function formatDateLong(key) {
 function loadSettings() {
   try {
     return Object.assign({
-      anim: true, dynamicBg: true, contrast: false,
+      anim: true, dynamicBg: true, scene3d: true, contrast: false,
       bigtext: false, reduceMotion: false, vibrate: true
     }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
   } catch(e) {
-    return { anim:true, dynamicBg:true, contrast:false, bigtext:false, reduceMotion:false, vibrate:true };
+    return { anim:true, dynamicBg:true, scene3d:true, contrast:false, bigtext:false, reduceMotion:false, vibrate:true };
   }
 }
 function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
@@ -51,6 +56,7 @@ function applySettings(s) {
   // synchro visuelle des toggles
   setToggle('set-anim', s.anim);
   setToggle('set-dynamic-bg', s.dynamicBg);
+  setToggle('set-3d', s.scene3d);
   setToggle('set-contrast', s.contrast);
   setToggle('set-bigtext', s.bigtext);
   setToggle('set-reduce-motion', s.reduceMotion);
@@ -80,6 +86,16 @@ function showToast(msg) {
   toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
 }
 
+// ===== ENTRÉE 3D DES CARTES =====
+function rise3D() {
+  document.querySelectorAll('.screen.active .float-panel').forEach((el, i) => {
+    el.style.setProperty('--i', i);
+    el.classList.remove('rise3d');
+    void el.offsetWidth; // relance l'animation
+    el.classList.add('rise3d');
+  });
+}
+
 // ===== NAVIGATION =====
 const screens = document.querySelectorAll('.screen');
 const navItems = document.querySelectorAll('.nav-item');
@@ -89,9 +105,16 @@ function goToScreen(target) {
   navItems.forEach(n => n.classList.remove('active'));
   document.getElementById('screen-' + target).classList.add('active');
   navItems.forEach(n => { if (n.dataset.screen === target) n.classList.add('active'); });
+  document.querySelectorAll('.menu-link').forEach(l => {
+    const on = l.dataset.screen === target;
+    l.classList.toggle('active', on);
+    if (on) l.setAttribute('aria-current', 'page'); else l.removeAttribute('aria-current');
+  });
   if (target === 'calendar') renderCalendar();
   if (target === 'stats') renderStats();
   window.scrollTo(0, 0);
+  if (scene) scene.setScreen(target);
+  rise3D();
 }
 navItems.forEach(btn => btn.addEventListener('click', () => { buzz(); goToScreen(btn.dataset.screen); }));
 
@@ -99,6 +122,7 @@ navItems.forEach(btn => btn.addEventListener('click', () => { buzz(); goToScreen
 const sideMenu = document.getElementById('side-menu');
 const menuOverlay = document.getElementById('menu-overlay');
 function openMenu() {
+  document.body.classList.add('menu-open');
   sideMenu.classList.add('open');
   sideMenu.setAttribute('aria-hidden', 'false');
   menuOverlay.hidden = false;
@@ -106,6 +130,7 @@ function openMenu() {
   buzz();
 }
 function closeMenu() {
+  document.body.classList.remove('menu-open');
   sideMenu.classList.remove('open');
   sideMenu.setAttribute('aria-hidden', 'true');
   menuOverlay.hidden = true;
@@ -126,33 +151,65 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeMenu(); }
 });
 
-// ===== MÉTÉO =====
-function getWeather(score) {
-  if (score >= 8.5) return { icon:'☀️', label:'Plein soleil — tu rayonnes !', fx:'sun', bg:'#1a2e1a' };
-  if (score >= 7)   return { icon:'🌤️', label:'Beau temps — bonne énergie', fx:'sun', bg:'#16241a' };
-  if (score >= 5)   return { icon:'⛅', label:'Nuageux — journée correcte', fx:'cloud', bg:'#14141c' };
-  if (score >= 3.5) return { icon:'🌧️', label:'Pluie — un peu difficile', fx:'rain', bg:'#0f1420' };
-  return { icon:'⛈️', label:'Orage — journée éprouvante', fx:'rain', bg:'#14101a' };
-}
+// ===== SCÈNE 3D =====
+const sceneCanvas = document.getElementById('scene-canvas');
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const freezeParam = new URLSearchParams(location.search).has('freeze');
+let scene = null;
 
+function motionAllowed(s) {
+  return !s.reduceMotion && !prefersReducedMotion.matches && !freezeParam;
+}
+function sceneWanted(s) { return s.scene3d && !s.contrast; }
+
+function syncScene(s) {
+  const wanted = sceneWanted(s);
+  if (wanted && !scene && sceneCanvas) {
+    scene = createScene(sceneCanvas, { anchorEl: document.getElementById('weather-hero'), motion: motionAllowed(s) });
+    if (scene) {
+      sceneCanvas.addEventListener('scene-lost', () => { scene = null; document.documentElement.dataset.scene = 'off'; updateWeather(); });
+      scene.setScreen(document.querySelector('.screen.active').id.replace('screen-', ''));
+    }
+  }
+  if (scene) {
+    scene.setActive(wanted);
+    scene.setMotion(motionAllowed(s));
+  }
+  document.documentElement.dataset.scene = scene && wanted ? 'on' : 'off';
+  const gyroBtn = document.getElementById('btn-gyro');
+  if (gyroBtn) gyroBtn.hidden = !(scene && wanted && motionAllowed(s) && scene.needsGyroPermission());
+}
+prefersReducedMotion.addEventListener?.('change', () => syncScene(loadSettings()));
+document.getElementById('btn-gyro')?.addEventListener('click', async () => {
+  if (!scene) return;
+  const ok = await scene.enableGyro();
+  showToast(ok ? 'Effet de profondeur activé 🧭' : 'Capteurs de mouvement refusés');
+  syncScene(loadSettings());
+});
+
+// ===== MÉTÉO =====
 function updateWeather() {
+  syncGauges();
   const p = +document.getElementById('gauge-physical').value;
   const m = +document.getElementById('gauge-mental').value;
   const h = +document.getElementById('gauge-mood').value;
   const score = avgScore(p, m, h);
   const w = getWeather(score);
-  document.getElementById('weather-icon').textContent = w.icon;
+  setEmoji(document.getElementById('weather-icon'), w.icon);
   document.getElementById('weather-label').textContent = w.label;
 
   const s = loadSettings();
+  syncScene(s);
+  if (scene) scene.setWeather(score, { p, m, h });
   // Fond dynamique
   if (s.dynamicBg && !s.contrast) {
     document.body.style.background = w.bg;
   } else {
     document.body.style.background = '';
   }
-  // Animation météo
-  renderWeatherFx(s.anim && !s.reduceMotion ? w.fx : null);
+  // Animation météo CSS : seulement quand la scène 3D n'est pas active
+  const sceneOn = document.documentElement.dataset.scene === 'on';
+  renderWeatherFx(!sceneOn && s.anim && !s.reduceMotion ? w.fx : null);
 }
 
 function renderWeatherFx(type) {
@@ -186,17 +243,31 @@ function renderWeatherFx(type) {
 }
 
 // ===== JAUGES =====
-const gaugeDefs = [
-  { input:'gauge-physical', val:'val-physical' },
-  { input:'gauge-mental',   val:'val-mental' },
-  { input:'gauge-mood',     val:'val-mood' }
+const GAUGES = [
+  { kind: 'physical', input: 'gauge-physical' },
+  { kind: 'mental',   input: 'gauge-mental' },
+  { kind: 'mood',     input: 'gauge-mood' }
 ];
-gaugeDefs.forEach(g => {
-  const input = document.getElementById(g.input);
-  const valEl = document.getElementById(g.val);
-  input.addEventListener('input', () => {
-    valEl.textContent = input.value;
-    input.setAttribute('aria-valuetext', input.value + ' sur 10');
+// Reflète la valeur dans la carte : chiffre, mot d'état, remplissage du curseur, émoji qui change d'expression
+function syncGauges() {
+  GAUGES.forEach(({ kind, input }) => {
+    const el = document.getElementById(input);
+    const v = +el.value;
+    document.getElementById('val-' + kind).textContent = v;
+    el.setAttribute('aria-valuetext', v + ' sur 10');
+    el.style.setProperty('--p', ((v - 1) / 9).toFixed(3));
+    document.getElementById('state-' + kind).textContent = gaugeState(kind, v);
+    const icon = document.getElementById('icon-' + kind);
+    const ch = gaugeIcon(kind, v);
+    if (icon.dataset.emoji !== ch) {
+      const first = !icon.dataset.emoji;
+      setEmoji(icon, ch);
+      if (!first) { icon.classList.remove('pop'); void icon.offsetWidth; icon.classList.add('pop'); }
+    }
+  });
+}
+GAUGES.forEach(({ input }) => {
+  document.getElementById(input).addEventListener('input', () => {
     buzz(5);
     updateWeather();
   });
@@ -207,12 +278,16 @@ let selectedTags = [];
 function renderTags() {
   const list = document.getElementById('tags-list');
   list.innerHTML = '';
-  TAGS.forEach(tag => {
+  TAGS.forEach((tag, i) => {
+    const { emoji, label } = splitTag(tag);
+    const selected = selectedTags.includes(tag);
     const chip = document.createElement('button');
-    chip.className = 'tag-chip' + (selectedTags.includes(tag) ? ' selected' : '');
-    chip.textContent = tag;
+    chip.className = 'tag-chip glass float-chip' + (selected ? ' selected' : '');
+    chip.style.setProperty('--c', TAG_COLORS[emoji] || '#a5b4fc');
+    chip.style.setProperty('--i', i);
+    chip.innerHTML = emojiHTML(emoji, 30) + '<span>' + label + '</span>';
     chip.type = 'button';
-    chip.setAttribute('aria-pressed', selectedTags.includes(tag) ? 'true' : 'false');
+    chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
     chip.addEventListener('click', () => {
       if (selectedTags.includes(tag)) selectedTags = selectedTags.filter(t => t !== tag);
       else selectedTags.push(tag);
@@ -225,11 +300,13 @@ function renderTags() {
 
 // ===== GREETING =====
 function renderGreeting() {
-  const h = new Date().getHours();
-  let g = 'Bonjour';
-  if (h >= 18 || h < 5) g = 'Bonsoir';
-  else if (h >= 12) g = 'Bon après-midi';
-  document.getElementById('home-greeting').textContent = g;
+  const hour = new Date().getHours();
+  const tod = timeOfDay(hour);
+  document.getElementById('home-greeting').textContent = greetingFor(hour);
+  document.getElementById('home-sub').textContent = moodPrompt(hour);
+  document.getElementById('welcome').dataset.tod = tod;
+  setEmoji(document.getElementById('welcome-icon'), TIME_ICONS[tod]);
+  document.documentElement.dataset.tod = tod;
 }
 function renderDate() {
   document.getElementById('today-date').textContent =
@@ -246,9 +323,6 @@ function loadTodayEntry() {
     document.getElementById('gauge-physical').value = e.p;
     document.getElementById('gauge-mental').value = e.m;
     document.getElementById('gauge-mood').value = e.h;
-    document.getElementById('val-physical').textContent = e.p;
-    document.getElementById('val-mental').textContent = e.m;
-    document.getElementById('val-mood').textContent = e.h;
     document.getElementById('note-input').value = e.note || '';
     selectedTags = e.tags ? [...e.tags] : [];
     document.getElementById('btn-save').textContent = 'Mettre à jour';
@@ -287,15 +361,8 @@ function renderCalendar() {
   const data = loadData();
   const grid = document.getElementById('calendar-grid');
   grid.innerHTML = '';
-  const today = new Date();
-  const cells = [];
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(today); d.setDate(d.getDate() - i);
-    cells.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
-  }
-  let dow = new Date(cells[0]).getDay();
-  dow = dow === 0 ? 6 : dow - 1;
-  for (let i = 0; i < dow; i++) {
+  const cells = last30Keys();
+  for (let i = 0; i < mondayOffset(cells[0]); i++) {
     const e = document.createElement('div');
     e.className = 'cal-cell cal-empty';
     e.setAttribute('aria-hidden', 'true');
@@ -305,14 +372,9 @@ function renderCalendar() {
     const cell = document.createElement('button');
     cell.className = 'cal-cell';
     if (data[key]) {
-      const score = avgScore(data[key].p, data[key].m, data[key].h);
+      const score = entryScore(data[key]);
       cell.textContent = Math.round(score);
-      cell.classList.add('has-data');
-      if (score >= 8) cell.classList.add('cal-super');
-      else if (score >= 6) cell.classList.add('cal-good');
-      else if (score >= 4) cell.classList.add('cal-ok');
-      else if (score >= 2) cell.classList.add('cal-low');
-      else cell.classList.add('cal-hard');
+      cell.classList.add('has-data', 'cal-' + scoreBand(score));
       cell.setAttribute('aria-label', formatDateLong(key) + ', score ' + score + ' sur 10');
     } else {
       cell.classList.add('cal-none');
@@ -356,40 +418,20 @@ function renderHistory() {
 function renderStats() {
   const data = loadData();
   const keys = Object.keys(data).sort();
-  const scores = keys.map(k => avgScore(data[k].p, data[k].m, data[k].h));
-  document.getElementById('stat-entries').textContent = keys.length;
-  if (scores.length > 0) {
-    const avg = scores.reduce((a,b)=>a+b,0) / scores.length;
-    document.getElementById('stat-avg').textContent = avg.toFixed(1);
-    document.getElementById('stat-best').textContent = Math.max(...scores).toFixed(1);
-  } else {
-    document.getElementById('stat-avg').textContent = '—';
-    document.getElementById('stat-best').textContent = '—';
-  }
-  // streak
-  let streak = 0;
-  const now = new Date();
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(now); d.setDate(d.getDate() - i);
-    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    if (data[key]) streak++; else break;
-  }
-  document.getElementById('stat-streak').textContent = streak;
+  const st = computeStats(data);
+  document.getElementById('stat-entries').textContent = st.entries;
+  document.getElementById('stat-avg').textContent = st.avg === null ? '—' : st.avg.toFixed(1);
+  document.getElementById('stat-best').textContent = st.best === null ? '—' : st.best.toFixed(1);
+  document.getElementById('stat-streak').textContent = st.streak;
 
   // bannière d'encouragement
   const banner = document.getElementById('streak-banner');
-  if (streak >= 3) {
-    banner.style.display = 'block';
-    let msg = '🔥 ' + streak + ' jours de suite, continue comme ça !';
-    if (streak >= 7) msg = '🌟 Une semaine complète ! Bravo pour ta régularité.';
-    if (streak >= 30) msg = '🏆 30 jours d\'affilée — tu es incroyable !';
-    banner.textContent = msg;
-  } else {
-    banner.style.display = 'none';
-  }
+  const msg = streakMessage(st.streak);
+  banner.style.display = msg ? 'block' : 'none';
+  if (msg) banner.textContent = msg;
 
   renderChart(keys);
-  renderInsight(data);
+  document.getElementById('insight-day').textContent = bestWeekday(data) || '—';
 }
 
 function renderChart(keys) {
@@ -397,7 +439,7 @@ function renderChart(keys) {
   const bars = document.getElementById('chart-bars');
   bars.innerHTML = '';
   const last7 = keys.slice(-7);
-  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  const days = DAY_NAMES;
   if (last7.length === 0) {
     bars.innerHTML = '<p style="font-size:12px;color:#52525b;">Pas encore de données.</p>';
     return;
@@ -416,66 +458,32 @@ function renderChart(keys) {
   });
 }
 
-function renderInsight(data) {
-  const dayScores = [[],[],[],[],[],[],[]];
-  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-  Object.keys(data).forEach(key => {
-    const [y, m, d] = key.split('-');
-    const idx = new Date(+y, +m-1, +d).getDay();
-    dayScores[idx].push(avgScore(data[key].p, data[key].m, data[key].h));
-  });
-  const avgs = dayScores.map(a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0);
-  const best = avgs.indexOf(Math.max(...avgs));
-  document.getElementById('insight-day').textContent = avgs[best] > 0 ? days[best] : '—';
-}
-
 // ===== AGENT IA =====
 async function askAgent(p, m, h, data) {
   const box = document.getElementById('agent-box');
   const txt = document.getElementById('agent-text');
+  const off = document.getElementById('agent-off');
+  if (!aiAllowed()) {                // pas de consentement : rien n'est envoyé nulle part
+    box.style.display = 'none';
+    off.hidden = false;
+    return;
+  }
+  off.hidden = true;
   box.style.display = 'block';
   txt.textContent = 'Analyse en cours...';
 
-  const keys = Object.keys(data).sort();
-  const last7 = keys.slice(-7);
-  const avg7 = last7.length ? last7.reduce((s,k)=>s+avgScore(data[k].p,data[k].m,data[k].h),0)/last7.length : null;
-  const lowDays = last7.filter(k => avgScore(data[k].p,data[k].m,data[k].h) < 4).length;
-
-  const systemPrompt = `Tu es un compagnon de bien-être bienveillant intégré dans l'application MoodCast.
-Tu analyses les scores de l'utilisateur et tu donnes un conseil court, doux et concret.
-Règles strictes :
-- Maximum 3 phrases
-- Jamais de diagnostic médical
-- Si le score moyen des 7 derniers jours est inférieur à 3.5 ou si plus de 4 jours sont difficiles, recommande doucement de consulter un professionnel
-- Tu n'es pas un psychologue, rappelle-le si nécessaire
-- Toujours encourageant et positif`;
-
-  const userMessage = `Voici mes scores du jour :
-- Énergie physique : ${p}/10
-- Énergie mentale : ${m}/10
-- Humeur : ${h}/10
-- Score moyen aujourd'hui : ${avgScore(p,m,h)}/10
-- Moyenne sur 7 jours : ${avg7 ? avg7.toFixed(1) : 'pas encore de données'}
-- Jours difficiles cette semaine : ${lowDays}`;
+  const { avg7, lowDays } = last7Summary(data);
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/.netlify/functions/coach', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': 'TA_CLE_API_ICI',
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        system: systemPrompt,
-        messages: [{ role:'user', content: userMessage }]
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ consent: true, p, m, h, avgToday: avgScore(p,m,h), avg7, lowDays })
     });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
     const result = await response.json();
-    txt.textContent = result.content[0].text;
+    if (!result.text) throw new Error('Réponse vide');
+    txt.textContent = result.text;
   } catch(e) {
     txt.textContent = 'Je ne peux pas te répondre pour l\'instant. Prends soin de toi 🌿';
     console.error('Erreur agent IA', e);
@@ -522,11 +530,35 @@ function bindToggle(id, key, onChange) {
   });
 }
 
+// ===== CONSENTEMENT : compagnon IA =====
+function syncAiToggle() {
+  setToggle('set-ai', aiAllowed());
+  if (aiAllowed()) document.getElementById('agent-off').hidden = true;
+}
+function setAi(on) {
+  setConsent(on);
+  syncAiToggle();
+  buzz();
+  showToast(on ? 'Compagnon IA activé ✨' : 'Compagnon IA désactivé : 100 % local');
+}
+document.getElementById('set-ai').addEventListener('click', () => setAi(!aiAllowed()));
+document.getElementById('btn-enable-ai').addEventListener('click', () => {
+  setAi(true);
+  const g = id => +document.getElementById(id).value;
+  askAgent(g('gauge-physical'), g('gauge-mental'), g('gauge-mood'), loadData());
+});
+function maybeConsent() {
+  const q = new URLSearchParams(location.search);
+  if (hasDecided() || q.has('noconsent') || (q.has('freeze') && !q.has('showconsent'))) return;
+  showConsent({ onChoice: ai => { syncAiToggle(); showToast(ai ? 'Compagnon IA activé ✨' : 'Parfait : tout reste sur ton appareil'); } });
+}
+
 function initSettings() {
   const s = loadSettings();
   applySettings(s);
   bindToggle('set-anim', 'anim');
   bindToggle('set-dynamic-bg', 'dynamicBg');
+  bindToggle('set-3d', 'scene3d');
   bindToggle('set-contrast', 'contrast');
   bindToggle('set-bigtext', 'bigtext');
   bindToggle('set-reduce-motion', 'reduceMotion');
@@ -605,13 +637,35 @@ document.getElementById('btn-clear-all').addEventListener('click', () => {
   closeMenu();
 });
 
+// ===== ÉCRAN D'OUVERTURE =====
+function reducedMotionNow() {
+  return prefersReducedMotion.matches || document.body.classList.contains('reduce-motion');
+}
+function maybeSplash() {
+  const q = new URLSearchParams(location.search);
+  if (q.has('nosplash') || q.has('freeze')) { maybeConsent(); return; }
+  try {
+    if (sessionStorage.getItem('moodcast-splash') === '1') { maybeConsent(); return; } // une fois par session
+    sessionStorage.setItem('moodcast-splash', '1');
+  } catch (e) { /* stockage indisponible : on joue l'animation */ }
+  playSplash({ quick: reducedMotionNow(), onDone: () => { rise3D(); maybeConsent(); } });
+}
+// Un clic sur le logo rejoue l'animation
+document.querySelectorAll('.logo-btn').forEach(btn => btn.addEventListener('click', () => {
+  buzz(15);
+  playSplash({ quick: reducedMotionNow(), onDone: rise3D });
+}));
+
 // ===== INIT =====
 function init() {
   renderGreeting();
   renderDate();
   initSettings();
   initNotif();
+  syncAiToggle();
   loadTodayEntry();
+  goToScreen('home');
+  maybeSplash();
 }
 init();
 

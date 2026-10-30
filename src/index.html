@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#22c55e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="MoodCast" />
+    <title>MoodCast — Ta météo intérieure</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="app.css" />
+</head>
+
+<body>
+    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+    <canvas id="scene-canvas" aria-hidden="true" class="fixed inset-0 z-0 h-screen w-screen pointer-events-none"></canvas>
+    <div class="weather-fx" id="weather-fx" aria-hidden="true"></div>
+
+    <main id="main-content">
+        <!-- ======== ACCUEIL ======== -->
+        <section id="screen-home" class="screen active" aria-labelledby="home-greeting">
+            <header class="app-header">
+                <button id="btn-menu" class="icon-btn burger-btn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="side-menu">
+                    <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+                </button>
+                <button type="button" class="logo logo-btn" aria-label="MoodCast — rejouer l'animation d'accueil">
+                    <span class="logo-big">M</span><span class="logo-small">ood</span><span class="logo-big">c</span><span class="logo-small">ast</span>
+                </button>
+                <button id="btn-notif" class="icon-btn" aria-label="Réglages de notification"><img class="emo " src="emoji/bell.webp" alt="" width="28" height="28" decoding="async" draggable="false"></button>
+            </header>
+
+            <div class="welcome glass float-panel" id="welcome" data-tod="day">
+                <div class="welcome-icon" id="welcome-icon" data-size="42" aria-hidden="true"><img class="emo " src="emoji/sun.webp" alt="" width="42" height="42" decoding="async" draggable="false"></div>
+                <div class="welcome-text">
+                    <p class="greeting" id="home-greeting">Bonjour</p>
+                    <p class="welcome-sub" id="home-sub"></p>
+                    <div class="date-pill" id="today-date"></div>
+                </div>
+            </div>
+
+            <div class="weather-hero scene:min-h-[300px] scene:flex scene:flex-col scene:justify-end scene:items-center" id="weather-hero">
+                <div class="weather-icon scene:sr-only" id="weather-icon" data-size="84" role="img" aria-label="Météo intérieure"><img class="emo " src="emoji/sun-small-cloud.webp" alt="" width="84" height="84" decoding="async" draggable="false"></div>
+                <div class="weather-label" id="weather-label">Comment tu te sens aujourd'hui ?</div>
+                <button id="btn-gyro" type="button" hidden class="glass mt-2 rounded-full px-3 py-1.5 text-xs text-emerald-200 min-h-9"><svg class="inline-block align-[-3px] mr-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Activer l'effet de profondeur</button>
+            </div>
+
+            <div class="gauge">
+                <div class="gauge-item gcard glass float-panel" data-gauge="physical">
+                    <div class="gcard-head">
+                        <span class="gcard-icon" id="icon-physical" data-size="40" aria-hidden="true"><img class="emo " src="emoji/biceps.webp" alt="" width="40" height="40" decoding="async" draggable="false"></span>
+                        <div class="gcard-title">
+                            <label class="gauge-name" for="gauge-physical">Corps</label>
+                            <span class="gcard-state" id="state-physical">Correct</span>
+                        </div>
+                        <div class="gcard-value"><span class="gauge-num" id="val-physical" aria-hidden="true">5</span><span class="gcard-max" aria-hidden="true">/10</span></div>
+                    </div>
+                    <input type="range" id="gauge-physical" min="1" max="10" value="5" step="1" aria-valuetext="5 sur 10" />
+                    <div class="gcard-scale" aria-hidden="true"><span>Épuisé</span><span>Au top</span></div>
+                </div>
+                <div class="gauge-item gcard glass float-panel" data-gauge="mental">
+                    <div class="gcard-head">
+                        <span class="gcard-icon" id="icon-mental" data-size="40" aria-hidden="true"><img class="emo " src="emoji/brain.webp" alt="" width="40" height="40" decoding="async" draggable="false"></span>
+                        <div class="gcard-title">
+                            <label class="gauge-name" for="gauge-mental">Mental</label>
+                            <span class="gcard-state" id="state-mental">Correct</span>
+                        </div>
+                        <div class="gcard-value"><span class="gauge-num" id="val-mental" aria-hidden="true">5</span><span class="gcard-max" aria-hidden="true">/10</span></div>
+                    </div>
+                    <input type="range" id="gauge-mental" min="1" max="10" value="5" step="1" aria-valuetext="5 sur 10" />
+                    <div class="gcard-scale" aria-hidden="true"><span>Saturé</span><span>Affûté</span></div>
+                </div>
+                <div class="gauge-item gcard glass float-panel" data-gauge="mood">
+                    <div class="gcard-head">
+                        <span class="gcard-icon" id="icon-mood" data-size="40" aria-hidden="true"><img class="emo " src="emoji/smile.webp" alt="" width="40" height="40" decoding="async" draggable="false"></span>
+                        <div class="gcard-title">
+                            <label class="gauge-name" for="gauge-mood">Humeur</label>
+                            <span class="gcard-state" id="state-mood">Correct</span>
+                        </div>
+                        <div class="gcard-value"><span class="gauge-num" id="val-mood" aria-hidden="true">5</span><span class="gcard-max" aria-hidden="true">/10</span></div>
+                    </div>
+                    <input type="range" id="gauge-mood" min="1" max="10" value="5" step="1" aria-valuetext="5 sur 10" />
+                    <div class="gcard-scale" aria-hidden="true"><span>Très bas</span><span>Radieux</span></div>
+                </div>
+                <div class="tags-section">
+                    <p class="tags-label">Comment ça se traduit ? (facultatif)</p>
+                    <div class="tags-list" id="tags-list" role="group" aria-label="Étiquettes d'émotion"></div>
+                </div>
+
+                <textarea id="note-input" placeholder="Une note pour aujourd'hui... (facultatif)" rows="3" aria-label="Note du jour"></textarea>
+                <button id="btn-save" class="btn-primary">Enregistrer ma météo</button>
+
+                <div class="agent-off glass" id="agent-off" hidden role="status">
+                    <span class="agent-off-ico" aria-hidden="true"><img class="emo " src="emoji/lock.webp" alt="" width="34" height="34" decoding="async" draggable="false"></span>
+                    <div class="agent-off-text">
+                        <strong>Compagnon IA désactivé</strong>
+                        <span>Tes données restent sur ton appareil. Tu peux l'activer quand tu veux.</span>
+                    </div>
+                    <button type="button" class="agent-off-btn" id="btn-enable-ai">Activer</button>
+                </div>
+
+                <div class="agent-box glass float-panel" id="agent-box" style="display:none;" role="status" aria-live="polite">
+                    <div class="agent-header">
+                        <span class="agent-avatar" aria-hidden="true"><img class="emo " src="emoji/sparkles.webp" alt="" width="26" height="26" decoding="async" draggable="false"></span>
+                        <span class="agent-title">Compagnon MoodCast</span>
+                    </div>
+                    <p class="agent-text" id="agent-text"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======== CALENDRIER ======== -->
+        <section id="screen-calendar" class="screen" aria-labelledby="cal-title">
+            <header class="app-header">
+                <button class="icon-btn burger-btn btn-menu-screen" aria-label="Ouvrir le menu" aria-controls="side-menu">
+                    <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+                </button>
+                <button type="button" class="logo logo-btn" aria-label="MoodCast — rejouer l'animation d'accueil">
+                    <span class="logo-big">M</span><span class="logo-small">ood</span><span class="logo-big">c</span><span class="logo-small">ast</span>
+                </button>
+                <span class="header-spacer"></span>
+            </header>
+            <h2 class="section-title" id="cal-title">Mes 30 derniers jours</h2>
+            <div class="calendar-days-header" aria-hidden="true">
+                <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+            </div>
+            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Calendrier des 30 derniers jours"></div>
+
+            <div class="legend">
+                <span class="leg-item"><span class="leg-dot" style="background:#052e16"></span>8-10</span>
+                <span class="leg-item"><span class="leg-dot" style="background:#14532d"></span>6-7</span>
+                <span class="leg-item"><span class="leg-dot" style="background:#292524"></span>4-5</span>
+                <span class="leg-item"><span class="leg-dot" style="background:#1c1400"></span>2-3</span>
+                <span class="leg-item"><span class="leg-dot" style="background:#7f1d1d"></span>0-1</span>
+            </div>
+            <h2 class="section-title">Historique récent</h2>
+            <div class="history-list" id="history-list"></div>
+        </section>
+
+        <!-- ======== STATS ======== -->
+        <section id="screen-stats" class="screen" aria-labelledby="stats-title">
+            <header class="app-header">
+                <button class="icon-btn burger-btn btn-menu-screen" aria-label="Ouvrir le menu" aria-controls="side-menu">
+                    <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+                </button>
+                <button type="button" class="logo logo-btn" aria-label="MoodCast — rejouer l'animation d'accueil">
+                    <span class="logo-big">M</span><span class="logo-small">ood</span><span class="logo-big">c</span><span class="logo-small">ast</span>
+                </button>
+                <span class="header-spacer"></span>
+            </header>
+            <h2 class="section-title" id="stats-title">Mes statistiques</h2>
+
+            <div class="streak-banner" id="streak-banner" style="display:none;" role="status"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card glass float-panel">
+                    <div class="stat-num" id="stat-entries">0</div>
+                    <div class="stat-label">jours enregistrés</div>
+                </div>
+                <div class="stat-card glass float-panel">
+                    <div class="stat-num" id="stat-avg">—</div>
+                    <div class="stat-label">score moyen</div>
+                </div>
+                <div class="stat-card glass float-panel">
+                    <div class="stat-num" id="stat-streak">0</div>
+                    <div class="stat-label">jours de suite</div>
+                </div>
+                <div class="stat-card glass float-panel">
+                    <div class="stat-num" id="stat-best">—</div>
+                    <div class="stat-label">meilleur score</div>
+                </div>
+            </div>
+
+            <div class="chart-box glass float-panel">
+                <div class="chart-title">Évolution sur 7 jours</div>
+                <div class="chart-bars" id="chart-bars"></div>
+            </div>
+
+            <div class="insight-box glass float-panel">
+                <div class="insight-label">Meilleur jour de la semaine</div>
+                <div class="insight-value" id="insight-day">—</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ======== MENU LATÉRAL ======== -->
+    <div class="menu-overlay" id="menu-overlay" hidden></div>
+    <aside class="side-menu" id="side-menu" aria-hidden="true" aria-label="Menu et paramètres">
+        <div class="side-menu-header">
+            <div class="menu-brand">
+                <span class="menu-brand-ico"><img class="emo " src="emoji/sunrise.webp" alt="" width="38" height="38" decoding="async" draggable="false"></span>
+                <div>
+                    <span class="side-menu-title">Menu</span>
+                    <span class="menu-brand-sub">ta météo intérieure</span>
+                </div>
+            </div>
+            <button id="btn-close-menu" class="icon-btn menu-close" aria-label="Fermer le menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <nav class="menu-nav" aria-label="Navigation principale">
+            <button class="menu-link" data-screen="home" style="--i:0"><span class="menu-ico"><img class="emo " src="emoji/house.webp" alt="" width="30" height="30" decoding="async" draggable="false"></span><span class="menu-link-label">Accueil</span></button>
+            <button class="menu-link" data-screen="calendar" style="--i:1"><span class="menu-ico"><img class="emo " src="emoji/calendar.webp" alt="" width="30" height="30" decoding="async" draggable="false"></span><span class="menu-link-label">Calendrier</span></button>
+            <button class="menu-link" data-screen="stats" style="--i:2"><span class="menu-ico"><img class="emo " src="emoji/chart.webp" alt="" width="30" height="30" decoding="async" draggable="false"></span><span class="menu-link-label">Statistiques</span></button>
+        </nav>
+
+        <section class="menu-card glass" style="--i:3">
+                <h3 class="menu-section-title"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/gear.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Paramètres</h3>
+                <div class="setting-block">
+                    <div class="setting-row">
+                    <label class="setting-label" for="set-notif-toggle"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/bell.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Rappel quotidien</label>
+                    <button class="toggle off" id="set-notif-toggle" role="switch" aria-checked="false" aria-label="Activer le rappel quotidien"></button>
+                </div>
+                <div class="setting-sub" id="set-notif-time-row" style="display:none;">
+                    <label class="setting-sublabel" for="set-notif-time">Heure du rappel</label>
+                    <input type="time" id="set-notif-time" class="time-input" value="08:00" />
+                </div>
+                </div>
+            </section>
+
+        <section class="menu-card glass" style="--i:4">
+                <h3 class="menu-section-title"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/palette.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Apparence</h3>
+                <div class="setting-block">
+                    <div class="setting-row">
+                    <label class="setting-label" for="set-anim"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/rain.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Météo animée</label>
+                    <button class="toggle" id="set-anim" role="switch" aria-checked="true" aria-label="Activer la météo animée"></button>
+                </div>
+                <div class="setting-row">
+                    <label class="setting-label" for="set-3d"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/window.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Scène 3D flottante</label>
+                    <button class="toggle" id="set-3d" role="switch" aria-checked="true" aria-label="Activer la scène 3D"></button>
+                </div>
+                <div class="setting-row">
+                    <label class="setting-label" for="set-dynamic-bg"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/rainbow.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Fond dynamique</label>
+                    <button class="toggle" id="set-dynamic-bg" role="switch" aria-checked="true" aria-label="Activer le fond dynamique"></button>
+                </div>
+                </div>
+            </section>
+
+        <section class="menu-card glass" style="--i:5">
+                <h3 class="menu-section-title"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/wheelchair.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Accessibilité</h3>
+                <div class="setting-block">
+                    <div class="setting-row">
+                    <label class="setting-label" for="set-contrast"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/halfmoon.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Contraste élevé</label>
+                    <button class="toggle off" id="set-contrast" role="switch" aria-checked="false" aria-label="Activer le contraste élevé"></button>
+                </div>
+                <div class="setting-row">
+                    <label class="setting-label" for="set-bigtext"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/abc.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Grand texte</label>
+                    <button class="toggle off" id="set-bigtext" role="switch" aria-checked="false" aria-label="Activer le grand texte"></button>
+                </div>
+                <div class="setting-row">
+                    <label class="setting-label" for="set-reduce-motion"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/turtle.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Réduire les animations</label>
+                    <button class="toggle off" id="set-reduce-motion" role="switch" aria-checked="false" aria-label="Réduire les animations"></button>
+                </div>
+                <div class="setting-row">
+                    <label class="setting-label" for="set-vibrate"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/vibrate.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Vibrations</label>
+                    <button class="toggle" id="set-vibrate" role="switch" aria-checked="true" aria-label="Activer les vibrations"></button>
+                </div>
+                </div>
+            </section>
+
+        <section class="menu-card glass" style="--i:6">
+                <h3 class="menu-section-title"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/lock.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Confidentialité</h3>
+                <div class="setting-block">
+                    <div class="setting-row">
+                        <label class="setting-label" for="set-ai"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/sparkles.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Compagnon IA</label>
+                        <button class="toggle off" id="set-ai" role="switch" aria-checked="false" aria-label="Activer le compagnon IA" aria-describedby="set-ai-note"></button>
+                    </div>
+                    <p class="menu-note" id="set-ai-note">Envoie tes trois scores du jour à Anthropic (États-Unis) pour écrire un conseil. Jamais ta note ni tes étiquettes. Désactivé = 100 % local.</p>
+                    <a class="menu-action" href="privacy.html" id="link-privacy"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/shield.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Politique de confidentialité</a>
+                </div>
+            </section>
+
+        <section class="menu-card glass" style="--i:7">
+                <h3 class="menu-section-title"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/floppy.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Mes données</h3>
+                <div class="setting-block">
+                    <button class="menu-action" id="btn-export"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/outbox.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Exporter mes données</button>
+                <button class="menu-action" id="btn-import"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/inbox.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Importer des données</button>
+                <input type="file" id="import-file" accept="application/json" hidden />
+                <button class="menu-action danger" id="btn-clear-all"><span class="menu-ico menu-ico-sm"><img class="emo " src="emoji/trash.webp" alt="" width="22" height="22" decoding="async" draggable="false"></span>Tout effacer</button>
+                </div>
+            </section>
+
+        <p class="menu-footer">MoodCast · ta météo intérieure<br><a href="privacy.html">Politique de confidentialité</a></p>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <!-- ======== NAV BASSE ======== -->
+    <nav class="bottom-nav glass" aria-label="Navigation">
+        <button class="nav-item active" data-screen="home" aria-label="Accueil">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            <span class="nav-label">Accueil</span>
+        </button>
+        <button class="nav-item" data-screen="calendar" aria-label="Calendrier">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span class="nav-label">Calendrier</span>
+        </button>
+        <button class="nav-item" data-screen="stats" aria-label="Statistiques">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            <span class="nav-label">Stats</span>
+        </button>
+    </nav>
+
+    <script src="meteo.js" defer></script>
+</body>
+
+</html>
