@@ -1,0 +1,30 @@
+{
+  "name": "moodcast",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MoodCast — ta météo intérieure (PWA, Three.js, Tailwind)",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node --env-file-if-exists=.env scripts/serve.mjs",
+    "start": "npm run build && npm run serve",
+    "check:ai": "node --env-file-if-exists=.env scripts/check-ai.mjs",
+    "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:unit": "vitest run unit",
+    "test:integration": "vitest run integration",
+    "test:e2e": "playwright test --project=e2e",
+    "test:visual": "playwright test --project=visual --workers=1",
+    "test:visual:update": "playwright test --project=visual --workers=1 --update-snapshots=all"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/cli": "^4.3.3",
+    "esbuild": "^0.28.2",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^4.3.3",
+    "vitest": "^5.0.5"
+  }
+}

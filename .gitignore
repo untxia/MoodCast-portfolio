@@ -17,3 +17,8 @@ index-allinone.html
 # Clés et secrets (IMPORTANT : ne jamais commiter de clé API)
 .env
 config.local.js
+
+# Build et rapports de tests
+dist/
+test-results/
+playwright-report/
