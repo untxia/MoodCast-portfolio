@@ -1,0 +1,152 @@
+/* ===== ÉCRAN D'OUVERTURE : « de l'orage au grand soleil » (~3,4 s) =====
+   0,0 s  ciel d'orage, pluie        0,5 s  éclair
+   1,2 s  les nuages s'écartent      1,3 s  le soleil se lève derrière le logo
+   1,5 s  MoodCast apparaît lettre par lettre      2,25 s  reflet de lumière
+   2,45 s  signature + jauges        3,4 s  fondu vers l'appli */
+#splash {
+  position: fixed; inset: 0; z-index: 500; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #05060b; color: #fff; cursor: pointer;
+}
+#splash:focus { outline: none; }
+#splash.sp-out { animation: spOut 0.7s ease-in forwards; pointer-events: none; }
+@keyframes spOut { to { opacity: 0; transform: scale(1.12); filter: blur(8px); } }
+
+.sp-sky {
+  position: absolute; inset: 0;
+  background: radial-gradient(120% 80% at 50% 110%, #1b2236 0%, #0b0e1a 55%, #05060b 100%);
+}
+.sp-dawn {
+  position: absolute; inset: 0; opacity: 0;
+  background:
+    radial-gradient(110% 80% at 50% 38%, rgba(252, 211, 77, 0.55) 0%, rgba(245, 158, 11, 0.22) 28%, transparent 62%),
+    linear-gradient(180deg, #0f1a2e 0%, #14291f 60%, #1a2e1a 100%);
+  animation: spFade 1.4s ease 1.25s forwards;
+}
+@keyframes spFade { to { opacity: 1; } }
+
+/* pluie */
+.sp-rain { position: absolute; inset: 0; animation: spRain 1.5s ease forwards; }
+@keyframes spRain { 0%, 62% { opacity: 1; } 100% { opacity: 0; } }
+.sp-drop {
+  position: absolute; top: -90px; width: 2px; height: 58px;
+  background: linear-gradient(transparent, rgba(190, 205, 255, 0.7));
+  transform: rotate(14deg);
+  animation: spFall linear infinite;
+}
+@keyframes spFall { to { transform: translate(-80px, 118vh) rotate(14deg); } }
+
+/* nuages : dérivent en continu (transform), puis s'écartent (translate) */
+.sp-cloud {
+  position: absolute; left: 50%; width: 130vw; height: 44vh; margin-left: -65vw;
+  border-radius: 50%; filter: blur(26px);
+}
+.sp-c1 { top: 2%;  background: radial-gradient(ellipse at 40% 50%, #4b5568 0%, #2a3142 45%, transparent 72%);
+  animation: spDriftA 5s ease-in-out infinite alternate, spPartL 1.1s cubic-bezier(0.5, 0, 0.2, 1) 1.2s forwards; }
+.sp-c2 { top: 20%; background: radial-gradient(ellipse at 60% 50%, #3a4255 0%, #1f2535 48%, transparent 72%);
+  animation: spDriftB 6s ease-in-out infinite alternate, spPartR 1.1s cubic-bezier(0.5, 0, 0.2, 1) 1.25s forwards; }
+.sp-c3 { top: 38%; background: radial-gradient(ellipse at 50% 50%, #2b3243 0%, #171c2a 50%, transparent 72%);
+  animation: spDriftA 7s ease-in-out infinite alternate, spLift 1.2s cubic-bezier(0.5, 0, 0.2, 1) 1.2s forwards; }
+@keyframes spDriftA { from { transform: translateX(-3vw); } to { transform: translateX(3vw); } }
+@keyframes spDriftB { from { transform: translateX(3vw); } to { transform: translateX(-3vw); } }
+@keyframes spPartL { to { translate: -95vw -4vh; opacity: 0; } }
+@keyframes spPartR { to { translate: 95vw 2vh; opacity: 0; } }
+@keyframes spLift { to { translate: 0 -30vh; scale: 1.3; opacity: 0; } }
+
+/* éclair */
+.sp-flash {
+  position: absolute; inset: 0; opacity: 0;
+  background: radial-gradient(60% 50% at 56% 30%, #fff, #bcd0ff 40%, transparent 75%);
+  animation: spFlash 0.75s ease-out 0.5s;
+}
+@keyframes spFlash { 0% { opacity: 0; } 8% { opacity: 0.95; } 20% { opacity: 0.15; } 32% { opacity: 0.8; } 100% { opacity: 0; } }
+.sp-bolt {
+  position: absolute; top: 3%; left: 50%; width: 30vmin; height: 52vh; margin-left: -2vmin; opacity: 0;
+  filter: drop-shadow(0 0 8px #9db8ff) drop-shadow(0 0 22px #6f93ff);
+  animation: spBolt 0.6s ease-out 0.52s;
+}
+.sp-bolt path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: spDraw 0.22s linear 0.52s forwards; }
+@keyframes spBolt { 0% { opacity: 0; } 10% { opacity: 1; } 30% { opacity: 0.35; } 45% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes spDraw { to { stroke-dashoffset: 0; } }
+
+/* soleil levant derrière le logo */
+.sp-sun {
+  position: absolute; left: 50%; top: 50%; width: 92vmin; height: 92vmin; margin: -46vmin 0 0 -46vmin;
+  translate: 0 70vh; opacity: 0;
+  animation: spSunUp 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) 1.3s forwards;
+}
+@keyframes spSunUp { to { translate: 0 -16vh; opacity: 1; } }
+.sp-rays {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 230, 150, 0.36) 0 4deg, transparent 4deg 15deg);
+  -webkit-mask: radial-gradient(circle, transparent 22%, #000 30%, transparent 70%);
+  mask: radial-gradient(circle, transparent 22%, #000 30%, transparent 70%);
+  animation: spSpin 40s linear infinite;
+}
+@keyframes spSpin { to { transform: rotate(360deg); } }
+.sp-orb {
+  position: absolute; inset: 30%; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #fff6c8 26%, #ffd45a 54%, rgba(255, 190, 70, 0) 72%);
+  box-shadow: 0 0 80px 30px rgba(255, 200, 80, 0.5);
+}
+
+/* logo */
+.sp-logo {
+  position: relative; z-index: 2; display: flex; align-items: baseline; justify-content: center;
+  padding: 8px 18px; margin-top: 6vh; overflow: hidden;
+}
+.sp-logo .logo-big {
+  font-size: 76px;
+  background: linear-gradient(180deg, #ffffff 0%, #d1fae5 30%, #4ade80 68%, #16a34a 100%);
+  -webkit-background-clip: text; background-clip: text;
+}
+.sp-logo .logo-small {
+  font-size: 40px; font-family: Georgia, serif; font-weight: 700;
+  background: linear-gradient(180deg, #ffffff 0%, #bbf7d0 55%, #4ade80 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.sp-l { --end-filter: none; display: inline-block; opacity: 0; animation: spLetter 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d) forwards; }
+.sp-l.logo-big { --end-filter: drop-shadow(3px 4px 0 #14532d); }
+@keyframes spLetter {
+  from { opacity: 0; transform: translateY(28px) scale(1.3); filter: blur(12px); }
+  to   { opacity: 1; transform: none; filter: var(--end-filter); }
+}
+.sp-shine {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.85) 50%, transparent 62%);
+  transform: translateX(-130%);
+  animation: spShine 1s ease 2.25s forwards;
+}
+@keyframes spShine { to { transform: translateX(130%); } }
+
+/* signature + mini-jauges (Corps / Mental / Humeur) */
+.sp-tag {
+  position: relative; z-index: 2; margin-top: 10px; font-size: 12px; letter-spacing: 0.34em; text-transform: uppercase;
+  color: #d1fae5; opacity: 0; animation: spUp 0.8s ease 2.45s forwards;
+}
+.sp-gauges { position: relative; z-index: 2; display: flex; gap: 10px; margin-top: 26px; }
+.sp-chip {
+  display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; font-size: 14px;
+  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  opacity: 0; animation: spUp 0.7s ease var(--cd) forwards;
+}
+.sp-chip i { display: block; width: 38px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.2); overflow: hidden; }
+.sp-chip i::after {
+  content: ''; display: block; height: 100%; width: 0; border-radius: 3px; background: #4ade80;
+  animation: spFill 0.9s ease calc(var(--cd) + 0.2s) forwards;
+}
+@keyframes spUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes spFill { to { width: var(--v); } }
+
+.sp-skip {
+  position: absolute; z-index: 3; right: 18px; bottom: max(22px, env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff;
+  border-radius: 999px; padding: 9px 18px; font-size: 13px; cursor: pointer; min-height: 40px;
+  opacity: 0; animation: spUp 0.6s ease 0.8s forwards;
+}
+
+@media (max-width: 380px) {
+  .sp-logo .logo-big { font-size: 60px; }
+  .sp-logo .logo-small { font-size: 32px; }
+}

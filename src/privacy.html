@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#22c55e" />
+    <title>MoodCast — Politique de confidentialité</title>
+    <style>
+        :root { --bg: #0f0f14; --card: rgb(255 255 255 / 0.05); --line: rgb(255 255 255 / 0.12); --text: #e4e4e7; --muted: #a1a1aa; --accent: #a5b4fc; --ok: #4ade80; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 24px 16px 64px; background: radial-gradient(120% 40% at 0% 0%, rgb(129 140 248 / 0.18), transparent 60%), var(--bg); color: var(--text);
+               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; line-height: 1.65; }
+        main { max-width: 720px; margin: 0 auto; }
+        a { color: var(--accent); }
+        .back { display: inline-block; margin-bottom: 18px; }
+        h1 { margin: 0 0 6px; font-size: 1.7rem; letter-spacing: -0.01em; }
+        .meta { margin: 0 0 22px; color: var(--muted); font-size: 0.85rem; }
+        .summary { display: grid; gap: 10px; margin: 0 0 26px; padding: 16px; border-radius: 20px; background: linear-gradient(145deg, rgb(74 222 128 / 0.12), rgb(129 140 248 / 0.1)); border: 1px solid var(--line); }
+        .summary p { margin: 0; }
+        h2 { margin: 30px 0 8px; font-size: 1.1rem; color: var(--ok); }
+        section { margin-bottom: 4px; }
+        p, li { font-size: 0.95rem; }
+        ul { padding-left: 1.2rem; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.88rem; }
+        th, td { padding: 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+        th { color: var(--muted); font-weight: 600; }
+        .box { padding: 14px 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+        .warn { border-color: rgb(251 191 36 / 0.5); }
+        code { background: var(--card); padding: 1px 6px; border-radius: 6px; font-size: 0.85em; }
+        @media (max-width: 520px) { th, td { padding: 8px 6px; } }
+    </style>
+</head>
+<body>
+<main>
+    <a class="back" href="index.html">← Retour à MoodCast</a>
+    <h1>Politique de confidentialité</h1>
+    <p class="meta">Version 1 — dernière mise à jour : 20 octobre 2026</p>
+
+    <div class="summary" role="note" aria-label="L'essentiel">
+        <p><strong>L'essentiel en trois lignes.</strong></p>
+        <p>🔒 Tes scores, notes et émotions restent <strong>uniquement sur ton appareil</strong>. MoodCast n'a ni compte, ni base de données, ni outil de mesure d'audience, ni cookie publicitaire.</p>
+        <p>✨ Le <strong>compagnon IA est facultatif</strong> et désactivé tant que tu ne l'as pas activé. Activé, il envoie tes trois scores du jour à Anthropic ; jamais ta note ni tes étiquettes.</p>
+        <p>🛡️ Tu peux tout <strong>exporter, effacer ou retirer ton consentement</strong> à tout moment depuis le menu.</p>
+    </div>
+
+    <section>
+        <h2>1. Qui est responsable ?</h2>
+        <p>Le responsable du traitement est l'éditeur de MoodCast, joignable à <a href="mailto:chrisdach64@gmail.com">chrisdach64@gmail.com</a>.</p>
+        <p>L'application est un projet personnel : aucune donnée n'est collectée à des fins commerciales, aucune n'est revendue.</p>
+    </section>
+
+    <section>
+        <h2>2. Quelles données, pour quoi, sur quel fondement ?</h2>
+        <table>
+            <thead><tr><th>Données</th><th>Finalité</th><th>Fondement</th></tr></thead>
+            <tbody>
+                <tr><td>Scores (Corps, Mental, Humeur), étiquettes d'émotion, note libre, date</td><td>Tenir ton journal, calendrier et statistiques. <strong>Stockées uniquement sur ton appareil</strong> (stockage local du navigateur).</td><td>Nécessaire au service que tu demandes (art. 6.1.b). Les données de bien-être pouvant révéler l'état de santé, elles ne quittent pas ton appareil sans ton accord.</td></tr>
+                <tr><td>Réglages (thème, accessibilité, rappel), choix de confidentialité (date et version)</td><td>Mémoriser tes préférences et ton consentement.</td><td>Nécessaire au fonctionnement (stockage strictement nécessaire).</td></tr>
+                <tr><td><strong>Compagnon IA, si activé</strong> : scores du jour (Corps, Mental, Humeur), score moyen du jour, moyenne des 7 derniers jours, nombre de jours difficiles</td><td>Rédiger un conseil bienveillant et personnalisé.</td><td><strong>Ton consentement explicite</strong> (art. 6.1.a et 9.2.a), libre, spécifique et révocable à tout moment.</td></tr>
+            </tbody>
+        </table>
+        <p>Ne sont <strong>jamais</strong> envoyés à l'IA : ta note libre, tes étiquettes d'émotion, tes dates, ton historique détaillé, ton identité, ton adresse IP (le serveur intermédiaire ne la transmet pas).</p>
+    </section>
+
+    <section>
+        <h2>3. Qui reçoit des données ?</h2>
+        <ul>
+            <li><strong>Anthropic, PBC</strong> (États-Unis) — uniquement si tu actives le compagnon IA, pour générer le conseil. Son traitement est régi par <a href="https://www.anthropic.com/legal/privacy" rel="noopener">sa propre politique de confidentialité</a>. MoodCast n'en conserve aucune copie.</li>
+            <li><strong>Netlify, Inc.</strong> — hébergeur de l'application et de la fonction intermédiaire. Il peut journaliser des données techniques (adresse IP, date, page) pour la sécurité et le fonctionnement de ses services (<a href="https://www.netlify.com/privacy/" rel="noopener">politique de Netlify</a>).</li>
+        </ul>
+        <p>Aucun autre destinataire. Aucune donnée n'est vendue ni utilisée pour de la publicité.</p>
+    </section>
+
+    <section>
+        <h2>4. Transferts hors de l'Union européenne</h2>
+        <p>Anthropic et Netlify sont établis aux États-Unis. Si tu actives le compagnon IA, tes scores du jour y sont donc transférés. Ces transferts reposent sur les garanties prévues par ces prestataires (clauses contractuelles types de la Commission européenne et/ou cadre de protection des données UE–États-Unis). Si tu préfères qu'aucune donnée ne sorte de l'Union, laisse le compagnon IA désactivé : l'application fonctionne alors entièrement en local.</p>
+    </section>
+
+    <section>
+        <h2>5. Combien de temps ?</h2>
+        <ul>
+            <li><strong>Journal et réglages</strong> : tant que tu ne les effaces pas (Menu ▸ Mes données ▸ Tout effacer) ou que tu ne vides les données du site dans ton navigateur.</li>
+            <li><strong>Choix de confidentialité</strong> : jusqu'à ce que tu le modifies ou que tu vides les données du site.</li>
+            <li><strong>Échanges avec l'IA</strong> : non conservés par MoodCast ; la durée côté prestataires dépend de leurs politiques.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>6. Tes droits et comment les exercer</h2>
+        <ul>
+            <li><strong>Accès et portabilité</strong> — Menu ▸ Mes données ▸ <em>Exporter mes données</em> (fichier JSON lisible).</li>
+            <li><strong>Rectification</strong> — modifie une entrée depuis l'accueil.</li>
+            <li><strong>Effacement</strong> — Menu ▸ Mes données ▸ <em>Tout effacer</em>.</li>
+            <li><strong>Retrait du consentement</strong> — Menu ▸ Confidentialité ▸ <em>Compagnon IA</em> (aussi simple que de l'activer, effet immédiat).</li>
+            <li><strong>Opposition, limitation</strong> — écris à <a href="mailto:chrisdach64@gmail.com">chrisdach64@gmail.com</a>.</li>
+        </ul>
+        <p>Comme les données du journal ne sont pas détenues par l'éditeur, la plupart de ces droits s'exercent directement par toi, dans l'application.</p>
+        <p class="box">Tu peux aussi introduire une réclamation auprès de la <a href="https://www.cnil.fr/fr/plaintes" rel="noopener">CNIL</a> (3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07).</p>
+    </section>
+
+    <section>
+        <h2>7. Cookies, traceurs et stockage</h2>
+        <p>MoodCast n'utilise <strong>aucun cookie</strong>, aucun outil de mesure d'audience, aucun traceur publicitaire. Il utilise uniquement le stockage local de ton navigateur (<code>localStorage</code>) pour ton journal et tes réglages, un <code>sessionStorage</code> pour ne lancer l'animation d'ouverture qu'une fois par session, et un cache (service worker) pour fonctionner hors-ligne. Ce stockage est strictement nécessaire au service : aucun bandeau de cookies n'est donc requis.</p>
+    </section>
+
+    <section>
+        <h2>8. Décisions automatisées</h2>
+        <p>Aucune décision produisant des effets juridiques ou similaires n'est prise. Le conseil de l'IA est une suggestion générée automatiquement, sans valeur de diagnostic.</p>
+    </section>
+
+    <section>
+        <h2>9. Sécurité</h2>
+        <p>La clé de l'API d'IA n'est jamais présente dans l'application : elle reste sur le serveur intermédiaire, qui refuse tout appel sans ton consentement, vérifie les données reçues et ne transmet que les scores. Les échanges sont chiffrés (HTTPS). Les réponses ne sont pas mises en cache.</p>
+        <p>Les données stockées sur ton appareil sont accessibles à toute personne qui utilise ton navigateur : verrouille ton appareil.</p>
+    </section>
+
+    <section>
+        <h2>10. Mineurs</h2>
+        <p>MoodCast n'est pas destiné aux moins de 15 ans sans l'accord d'un parent ou d'un représentant légal (âge du consentement numérique en France).</p>
+    </section>
+
+    <section>
+        <h2>11. Avertissement santé</h2>
+        <p class="box warn">MoodCast n'est pas un dispositif médical et ne remplace pas l'avis d'un professionnel de santé. En cas de détresse, contacte un professionnel ou les services d'urgence (en France : <strong>3114</strong>, numéro national de prévention du suicide, 24 h/24).</p>
+    </section>
+
+    <section>
+        <h2>12. Modifications</h2>
+        <p>Si les traitements changent (par exemple un nouveau destinataire), cette page est mise à jour et ton consentement t'est redemandé.</p>
+    </section>
+
+    <p class="meta">Contact : <a href="mailto:chrisdach64@gmail.com">chrisdach64@gmail.com</a></p>
+</main>
+</body>
+</html>
